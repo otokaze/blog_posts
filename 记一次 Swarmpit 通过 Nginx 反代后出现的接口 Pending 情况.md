@@ -7,11 +7,15 @@
 
 #### 现象
 通过 `Nginx` 反代后发现打开 `Swarmpit` 主页的速度极其的慢，打开 `Console` 观察所发送请求都处于 `Pending` 状态（如图）
-![image](https://www.otokaze.cn/wp-content/uploads/2019/10/TCP_handshake.png)
+
+![image](https://ws1.sinaimg.cn/large/c2f00e48gy1g7sgpc1pb0j20ss0y8af6.jpg)
+
 直觉告诉我，应该是浏览器与 `Nginx` 之间建立的 `keeplive` 连接的缓存区一直有数据在处理，从而引起了之后这条 `keeplive` 上的所有请求都发生了阻塞。
 
-为了证实我的猜想，我就去康康 `netstat` 它是怎么说的：
+为了证实我的猜想，我就去康康 `netstat` 它是怎么说的：  
+
 ![image](http://ws1.sinaimg.cn/large/c2f00e48gy1g7sivmy7j6j213o0ownky.jpg)
+
 端口 `6080` 也就是我部署的 `Swarmpit` 服务所监听的真实端口，可以看到作为服务方的  `::1:6080` 出现了很多 `tcp6` 不寻常的 `CLOSE_WAIT`，它对应的客户端的地址 `::1:45822` 应该是 `Nginx` 在这里作为反代的客户端通信端口。
 
 这里我就很奇怪，我本机根本没有 `ipv6` 的地址，而且用作反代的 `Nginx` 也没监听 tcpv6 的端口啊，哪来的 `tcpv6` 的连接呢？我再仔细翻阅 `Nginx` 的配置这才发现了其中的端倪：
